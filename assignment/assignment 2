@@ -1,0 +1,88 @@
+import { useEffect, useState } from "react";
+
+function TodoApp() {
+  const [task, setTask] = useState("");
+  const [tasks, setTasks] = useState(() => {
+    const saved = localStorage.getItem("tasks");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [filter, setFilter] = useState("all");
+  const [sortAsc, setSortAsc] = useState(true);
+
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
+
+  const addTask = () => {
+    if (task.trim() === "") return;
+    setTasks([...tasks, { id: Date.now(), text: task.trim(), completed: false }]);
+    setTask("");
+  };
+
+  const deleteTask = (id) => {
+    setTasks(tasks.filter((t) => t.id !== id));
+  };
+
+  const toggleComplete = (id) => {
+    setTasks(tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));
+  };
+
+  const filteredTasks = tasks.filter((t) =>
+    filter === "completed" ? t.completed : filter === "active" ? !t.completed : true
+  );
+
+  const sortedTasks = [...filteredTasks].sort((a, b) =>
+    sortAsc ? a.text.localeCompare(b.text) : b.text.localeCompare(a.text)
+  );
+
+  return (
+    <div className="max-w-md mx-auto p-4">
+      <h1 className="text-xl font-bold mb-4">React To-Do List</h1>
+      <div className="flex mb-4">
+        <input
+          className="border p-2 w-full"
+          value={task}
+          onChange={(e) => setTask(e.target.value)}
+          placeholder="Add a new task"
+        />
+        <button onClick={addTask} className="bg-blue-500 text-white px-4 py-2 ml-2">
+          Add
+        </button>
+      </div>
+
+      <div className="flex justify-between mb-2">
+        <div className="space-x-2">
+          <button onClick={() => setFilter("all")} className="border px-2 py-1">
+            All
+          </button>
+          <button onClick={() => setFilter("active")} className="border px-2 py-1">
+            Active
+          </button>
+          <button onClick={() => setFilter("completed")} className="border px-2 py-1">
+            Completed
+          </button>
+        </div>
+        <button onClick={() => setSortAsc(!sortAsc)} className="border px-2 py-1">
+          Sort {sortAsc ? "↓" : "↑"}
+        </button>
+      </div>
+
+      <ul className="space-y-2">
+        {sortedTasks.map((t) => (
+          <li key={t.id} className="flex justify-between items-center border p-2">
+            <span
+              className={`flex-1 cursor-pointer ${t.completed ? "line-through text-gray-500" : ""}`}
+              onClick={() => toggleComplete(t.id)}
+            >
+              {t.text}
+            </span>
+            <button onClick={() => deleteTask(t.id)} className="text-red-500 ml-2">
+              Delete
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
